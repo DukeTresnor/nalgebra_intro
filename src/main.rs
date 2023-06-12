@@ -46,13 +46,6 @@ fn main() {
     //println!("vec4: {}", vec4);
 
 
-/*
-matrix_logarithm_so3_from_rotation_matrix_bigso3(
-    // params: 3x3 rotation matrix in SO3
-    // returns: the matrix logarithm of R, which is a 3x3 skew-symmetric vector [w]theta -- or [omega] * theta_value
-
- */
-
     let logarithm_test = matrix![
         0.0, -1.0, 0.0;
         1.0, 0.0, 0.0;
@@ -68,9 +61,31 @@ matrix_logarithm_so3_from_rotation_matrix_bigso3(
 
     println!("unscewed vector from logarithm output: {}", unscewed_test);
 
-    let exp_coor_test = exponential_rotation_matrix_bigso3_from_exponential_coordinates_r3(&unscewed_test, TEST_THETA);
+    let exp_coor_test = exponential_rotation_matrix_bigso3_from_exponential_coordinates_r3(&logarithm_output_for_logarithm_test);
 
     println!("exp_coor_test: {}", exp_coor_test);
+
+
+
+    // unit_vector_r3_angle_from_exponential_coordinates_r3
+
+    let (omega_hat, theta_angle) = unit_vector_r3_angle_from_exponential_coordinates_r3(&unscewed_test);
+
+    println!("omega_hat: {}, theta_angle: {}", omega_hat, theta_angle);
+
+
+//transform_bigse3_from_rotation_bigso3_position_r3 
+    let rotation_test = matrix![
+        0.0, -1.0, 0.0;
+        1.0, 0.0, 0.0;
+        0.0, 0.0, 1.0;
+    ];
+    
+    let position_test = na::Vector3::new(0.0, 0.0, 0.0);
+
+    let transform_test = transform_bigse3_from_rotation_bigso3_position_r3(&rotation_test, &position_test);
+
+    println!("transform_test: {}", transform_test);
 
 
 }
@@ -82,7 +97,7 @@ matrix_logarithm_so3_from_rotation_matrix_bigso3(
 fn near_zero(
     // params: A scalar input to check
     // returns: boolean, true if input is close to zero, false otherwise
-    scalar_input: f64,
+    scalar_input: &f64,
 ) -> bool {
     //
     scalar_input.abs() < 1.0e-6
@@ -115,33 +130,27 @@ fn trace_of_matrix3(
     trace
 }
 
+fn unit_vector_r3_angle_from_exponential_coordinates_r3(
+    // params: exponential_coordinates -- 3-vector in R3 representing the exponential coordinates necessary for a particular rotation
+    // returns: omega_hat -- a unit rotation axis
+    // returns: theta_angle -- the rotation angle coresponding to the given exponential coordinates
+    exponential_coordinates: &na::Vector3::<f64>,
+) -> (na::Vector3<f64>, f64){
+    //
+    let omega_hat = check_for_normalization_r3(&exponential_coordinates);
+    let theta_angle = exponential_coordinates.norm();
 
-
-/*
-
-def AxisAng3(expc3):
-    """Converts a 3-vector of exponential coordinates for rotation into
-    axis-angle form
-
-    :param expc3: A 3-vector of exponential coordinates for rotation
-    :return omghat: A unit rotation axis
-    :return theta: The corresponding rotation angle
-
-    Example Input:
-        expc3 = np.array([1, 2, 3])
-    Output:
-        (np.array([0.26726124, 0.53452248, 0.80178373]), 3.7416573867739413)
-    """
-    return (Normalize(expc3), np.linalg.norm(expc3))
-
- */
-
-
-
+    (omega_hat, theta_angle)
+}
 
 
 
 // -- Helper Functions -- //
+
+
+
+
+
 
 
 // -- Chapter 3 -- //
@@ -183,24 +192,46 @@ fn exponential_rotation_matrix_bigso3_from_exponential_coordinates_r3(
     // params: Any normalized 3-vector in R3 representing angular velocity (?) w is in R3
     //           should be able to wrap the vector input into a Unit to say it needs to be a Unit Vector type, but not sure how to do at the moment
     // params: Any scalar theta representing the amoung of angular rotation
+    // patams: skew_exponential_coordinates: a 3x3 skew-symmetric matrix representing exponential coordinates
     // returns: The rotation matrix R in SO3 resulting from exponential coordinates w_theta
-    vector_r3: &na::Vector3<f64>,
-    theta_scalar: f64,
+    // old coordinates, now we only give skewed exponential coordinates -- ie matrix in, matrix out
+    //vector_r3: &na::Vector3<f64>,
+    //theta_scalar: f64,
+    skew_exponential_coordinates: &na::Matrix3<f64>,
 
 ) -> na::Matrix3<f64> {
     //
 
-    let normal_vector_r3 = check_for_normalization_r3(&vector_r3);
+    let dummy_return = matrix![
+        0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0;
+    ];
 
-    let scew_exponential_coordinates = scew_symmetric_matrix_so3_from_vector_r3(&normal_vector_r3);
+    let un_scewed_exponential_coordinates = vector_r3_from_scew_symmetric_matrix_so3(skew_exponential_coordinates);
 
-    let scew_exponential_coordinates_squared = scew_exponential_coordinates * scew_exponential_coordinates;
+    if near_zero(&un_scewed_exponential_coordinates.norm()) {
+        return matrix![
+        0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0;
+        ]
+    } else {
+        let (rotation_axis, theta_angle) = unit_vector_r3_angle_from_exponential_coordinates_r3(&un_scewed_exponential_coordinates);
 
-    let rotation: na::Matrix3<f64> = na::Matrix3::identity() + theta_scalar.sin() * scew_exponential_coordinates + (1.0 - theta_scalar.cos()) * scew_exponential_coordinates_squared;
+        let normal_vector_r3 = check_for_normalization_r3(&rotation_axis);
+
+        let scew_exponential_coordinates = scew_symmetric_matrix_so3_from_vector_r3(&normal_vector_r3);
+
+        let scew_exponential_coordinates_squared = scew_exponential_coordinates * scew_exponential_coordinates;
+
+        let rotation: na::Matrix3<f64> = na::Matrix3::identity() + theta_angle.sin() * scew_exponential_coordinates + (1.0 - theta_angle.cos()) * scew_exponential_coordinates_squared;
+
+        return rotation
+    }
 
 
 
-    rotation
 
 }
 
@@ -234,13 +265,13 @@ fn matrix_logarithm_so3_from_rotation_matrix_bigso3(
 
     } else if cosine_of_theta <= -1.0 {
         println!("less than -1");
-        if !near_zero(1.0 + rotation_matrix_bigso3[(2,2)]) {
+        if !near_zero(&(1.0 + rotation_matrix_bigso3[(2,2)])) {
             omega_vector = ( 1.0 / (2.0 * (1.0 + rotation_matrix_bigso3[(2,2)].sqrt() ) ) ) * 
                 na::Vector3::new(
                     rotation_matrix_bigso3[(0,2)], rotation_matrix_bigso3[(1,2)], 1.0 + rotation_matrix_bigso3[(2,2)]
                 );
             
-        } else if !near_zero(1.0 + rotation_matrix_bigso3[(1,1)]) {
+        } else if !near_zero(&(1.0 + rotation_matrix_bigso3[(1,1)])) {
             omega_vector = ( 1.0 / (2.0 * (1.0 + rotation_matrix_bigso3[(1,1)].sqrt() ) ) ) * 
                 na::Vector3::new(
                     rotation_matrix_bigso3[(0,1)], 1.0 + rotation_matrix_bigso3[(1,1)], rotation_matrix_bigso3[(2,1)]
@@ -265,5 +296,34 @@ fn matrix_logarithm_so3_from_rotation_matrix_bigso3(
 
     
 }
+/*
+    :param R: A 3x3 rotation matrix
+    :param p: A 3-vector
+    :return: A homogeneous transformation matrix corresponding to the inputs
+ */
+
+
+fn transform_bigse3_from_rotation_bigso3_position_r3(
+    // params: rotation_matrix -- A 3x3 rotation matrix in SO3 -- R
+    // params: position_vector -- A 3x1 position vector in R3 -- p
+    // returns: transform_matrix -- A 4x4 homogenous transform matrix in SE3, in the form T = [R, p; 0, 1] -- T
+    rotation_matrix: &na::Matrix3<f64>,
+    position_vector: &na::Vector3<f64>,
+) -> na::Matrix4<f64> {
+    //
+
+
+
+    let transform_matrix = na::Matrix4::new(
+        rotation_matrix[(0,0)], rotation_matrix[(0,1)], rotation_matrix[(0,2)], position_vector[0],
+        rotation_matrix[(1,0)], rotation_matrix[(1,1)], rotation_matrix[(1,2)], position_vector[1], 
+        rotation_matrix[(2,0)], rotation_matrix[(2,1)], rotation_matrix[(2,2)], position_vector[2],
+        0.0                   , 0.0                   , 0.0                   , 1.0                   ,
+    );
+
+    transform_matrix
+}
+
+
 
 // -- Chapter 3 -- //
