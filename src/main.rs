@@ -142,7 +142,7 @@ fn unit_vector_r3_angle_from_exponential_coordinates_r3(
     // returns: omega_hat -- a unit rotation axis
     // returns: theta_angle -- the rotation angle coresponding to the given exponential coordinates
     exponential_coordinates: &na::Vector3::<f64>,
-) -> (na::Vector3<f64>, f64){
+) -> (na::Vector3<f64>, f64) {
     //
     let omega_hat = check_for_normalization_r3(&exponential_coordinates);
     let theta_angle = exponential_coordinates.norm();
@@ -209,13 +209,8 @@ fn exponential_rotation_matrix_bigso3_from_exponential_coordinates_so3(
 ) -> na::Matrix3<f64> {
     //
 
-    let dummy_return = matrix![
-        0.0, 0.0, 0.0;
-        0.0, 0.0, 0.0;
-        0.0, 0.0, 0.0;
-    ];
 
-    let un_scewed_exponential_coordinates = vector_r3_from_scew_symmetric_matrix_so3(skew_exponential_coordinates);
+    let un_scewed_exponential_coordinates = vector_r3_from_scew_symmetric_matrix_so3(&skew_exponential_coordinates);
 
     if near_zero(&un_scewed_exponential_coordinates.norm()) {
         return matrix![
@@ -337,7 +332,7 @@ fn rotation_bigso3_position_r3_from_transform_bigse3(
     // returns: rotation_matrix -- A 3x3 rotation matrix in SO3 -- R
     // returns: position_vector -- A 3x1 position vector in R3 -- p
     transform_matrix: &na::Matrix4<f64>,
-) -> (na::Matrix3<f64>, na::Vector3<f64> ){
+) -> (na::Matrix3<f64>, na::Vector3<f64>) {
     //
     let rotation_matrix = matrix![
         transform_matrix[(0,0)], transform_matrix[(0,1)], transform_matrix[(0,2)];
@@ -492,7 +487,7 @@ fn axis_angle_representation_r6_from_exponential_coordinates_r6(
         let last_three_exponential_coordinates_r6 = na::vector![
             exponential_coordinates_r6[3], exponential_coordinates_r6[4], exponential_coordinates_r6[5]
         ];
-        let theta_angle = last_three_exponential_coordinates_r6.norm();
+        theta_angle = last_three_exponential_coordinates_r6.norm();
     }
 
     let screw_axis_r6 = exponential_coordinates_r6 / theta_angle;
@@ -502,31 +497,79 @@ fn axis_angle_representation_r6_from_exponential_coordinates_r6(
 
 
 /*
-    """Computes the matrix exponential of an se3 representation of
-    exponential coordinates
 
-    :param se3mat: A matrix in se3
-    :return: The matrix exponential of se3mat
+exponential_rotation_matrix_bigso3_from_exponential_coordinates_so3
+
  */
 
 
 fn exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(
     // Computes the matrix exponential of an se3 representation of exponential coordinates
-    // (ie if you have a 6-vector twist in its scew representation (a 4x4 matrix), this converts said matrix into a homogeneous transformation matrix)
+    // (ie if you have a 6-vector twist in its scew representation (a 4x4 matrix), this converts said matrix into a homogeneous transformation matrix that is the matrix exponential)
     // params: exponential_coordinate_matrix_se3 -- A 4x4 matrix representation of exponential coordinates
     // returns: exponential_transform_matrix_bigse3 -- A 4x4 homoegenous transformation matrix representing the matrix exponential of exponential_coordinate_matrix_se3
     exponential_coordinate_matrix_se3: &na::Matrix4<f64>,
 ) -> na::Matrix4<f64> {
     //
 
-    let exponential_transform_matrix_bigse3 = na::matrix![
+    let mut exponential_transform_matrix_bigse3 = na::matrix![
         0.0, 0.0, 0.0, 0.0;
         0.0, 0.0, 0.0, 0.0;
         0.0, 0.0, 0.0, 0.0;
         0.0, 0.0, 0.0, 0.0;        
     ];
 
+    let scew_exponential_coordinates = na::matrix![
+        exponential_coordinate_matrix_se3[(0,0)], exponential_coordinate_matrix_se3[(0,1)], exponential_coordinate_matrix_se3[(0,2)];
+        exponential_coordinate_matrix_se3[(1,0)], exponential_coordinate_matrix_se3[(1,1)], exponential_coordinate_matrix_se3[(1,2)];
+        exponential_coordinate_matrix_se3[(2,0)], exponential_coordinate_matrix_se3[(2,1)], exponential_coordinate_matrix_se3[(2,2)];        
+    ];
+
+
+    let un_scewed_exponential_coordinates = vector_r3_from_scew_symmetric_matrix_so3(&scew_exponential_coordinates);
+
+    if near_zero(&un_scewed_exponential_coordinates.norm()) {
+        exponential_transform_matrix_bigse3 = na::matrix![
+            1.0, 0.0, 0.0, exponential_coordinate_matrix_se3[(0,3)];
+            0.0, 1.0, 0.0, exponential_coordinate_matrix_se3[(1,3)];
+            0.0, 0.0, 1.0, exponential_coordinate_matrix_se3[(2,3)];
+            0.0, 0.0, 0.0, 1.0;        
+        ];
+    } else {
+        let (rotation_axis, theta_angle) = unit_vector_r3_angle_from_exponential_coordinates_r3(&un_scewed_exponential_coordinates);
+        let normal_vector_r3 = check_for_normalization_r3(&rotation_axis);
+        let scew_exponential_coordinates = scew_symmetric_matrix_so3_from_vector_r3(&normal_vector_r3);
+        let scew_exponential_coordinates_squared = scew_exponential_coordinates * scew_exponential_coordinates;
+        let rotation: na::Matrix3<f64> = na::Matrix3::identity() + theta_angle.sin() * scew_exponential_coordinates + (1.0 - theta_angle.cos()) * scew_exponential_coordinates_squared;
+
+        let big_g_theta: na::Matrix3<f64> = na::Matrix3::identity() * theta_angle + (1.0 - theta_angle.cos()) * scew_exponential_coordinates + (theta_angle - theta_angle.sin()) * scew_exponential_coordinates_squared;
+
+        let linear_velocity = na::vector![
+            exponential_coordinate_matrix_se3[(0,3)], exponential_coordinate_matrix_se3[(1,3)], exponential_coordinate_matrix_se3[(2,3)]
+        ];
+
+        let big_g_velocity = big_g_theta * linear_velocity;
+
+        exponential_transform_matrix_bigse3 = na::matrix![
+            rotation[(0,0)], rotation[(0,0)], rotation[(0,0)], big_g_velocity[0];
+            rotation[(0,0)], rotation[(0,0)], rotation[(0,0)], big_g_velocity[1];
+            rotation[(0,0)], rotation[(0,0)], rotation[(0,0)], big_g_velocity[2];
+            0.0, 0.0, 0.0, 1.0;        
+        ];
+    
+    }
+
+
     exponential_transform_matrix_bigse3
+}
+
+
+
+
+fn _matrix_logarithm_se3_from_transformation_matrix_bigse3(
+    //
+) {
+    //
 }
 
 
