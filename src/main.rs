@@ -1,9 +1,17 @@
 extern crate nalgebra as na;
 
+use std::thread::current;
+
 use na::matrix;
 //use na::Unit;
 use na::Dyn;
-use na::U6;
+//use na::U6;
+
+use na::{U2, U6, Dynamic, ArrayStorage, VecStorage, DMatrix};
+
+
+//Matrix6xXf64
+type Matrix6xXf64 = na::OMatrix<f64, U6, Dyn>;
 
 pub const TEST_THETA: f64 = std::f64::consts::PI * 1.0;
 
@@ -17,82 +25,124 @@ pub const TEST_THETA: f64 = std::f64::consts::PI * 1.0;
 // also be sure to wrap each function in options, so that you can catch any potential errors
 
 fn main() {
+
+    let length_1 = 0.425;
+    let length_2 = 0.392;
+    let width_1 = 0.109;
+    let width_2 = 0.082;
+    let height_1 = 0.089;
+    let height_2 = 0.095;
     
-    let _mat1 = na::Matrix4::new(
-        2.0, 1.0, 1.0, -5.0,
-        1.0, 2.0, 1.0, -9.4, 
-        1.0, 1.0, 2.0, 0.0,
-        0.0, 0.0, 0.0, 1.0,
+
+    let home_configuration = na::matrix![
+        -1.0, 0.0, 0.0, length_1 + length_2;
+        0.0, 0.0, 1.0, width_1 + width_2;
+        0.0, 1.0, 0.0, height_1 - height_2;
+        0.0, 0.0, 0.0, 1.0;        
+    ];
+
+
+/*
+    let blist_matrix = na::matrix![
+        0.0, 0.0, -1.0, -1.0, -1.0, 0.0;
+        0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
+        1.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+        -three_length, 0.0, 0.0, 0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+        0.0, 0.0, -three_length, -two_length, -length_1, 0.0;
+    ];
+
+    let blist_test = DMatrix::from_row_slice(6, 6, &[
+        0.0, 0.0, -1.0, -1.0, -1.0, 0.0,
+        0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        -three_length, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, -three_length, -two_length, -length_1, 0.0
+        ]
+
     );
-
-    
-
-    //let vec1 = na::Vector3::new(4.0, -3.0, 1.0);
-
-    //let mat2 = scew_symmetric_matrix_so3_from_vector_r3(&vec1);
-
-    //println!("mat2: {}", mat2);
-    //println!("vec1: {}", vec1);
-
-    //let theta = TEST_THETA;
-
-
-    //let mat3 = exponential_rotation_matrix_bigso3_from_exponential_coordinates_r3(&vec1, theta);
-
-    //println!("rotation 3: {}", mat3);
-
-
-    //let vec4 = vector_r3_from_scew_symmetric_matrix_so3(&mat2);
-
-    //println!("vec4: {}", vec4);
-
-
-    let logarithm_test = matrix![
-        0.0, -1.0, 0.0;
-        1.0, 0.0, 0.0;
-        0.0, 0.0, 1.0;
+*/
+    let spacelist_matrix = na::matrix![
+        0.0     , 0.0      , 0.0      , 0.0      , 0.0     , 0.0                ;
+        0.0     , 1.0      , 1.0      , 1.0      , 0.0     , 1.0                ;
+        1.0     , 0.0      , 0.0      , 0.0      , -1.0    , 0.0                ;
+        0.0     , -height_1, -height_1, -height_1, -width_1, height_2 - height_1;
+        0.0     , 0.0      , 0.0      , 0.0      , length_1 + length_2, 0.0;
+        0.0     , 0.0      , length_1 , length_1 + length_2, 0.0, length_1 + length_2;
     ];
 
-    let logarithm_output_for_logarithm_test = matrix_logarithm_so3_from_rotation_matrix_bigso3(&logarithm_test);
+ 
+
+ /*    
+    // need something of Matrix6xXf64 type
+    // try here
+    let skdjhvb: na::MatrixMN::<f64, Dyn, U6> = na::MatrixMN::<f64, Dyn, U6>::new(
+
+        0.0, 0.0, -1.0, -1.0, -1.0, 0.0,
+        0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        -three_length, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, -three_length, -two_length, -length_1, 0.0
+    );
+*/
 
 
-    println!("logarithm_output_for_logarithm_test: {}", logarithm_output_for_logarithm_test);
+    // Matrix6xXf64
+    // na::OMatrix<f64, U6, Dyn>
+    //let blist_test_two: na::DMatrix::<f64> = Matrix6xXf64::zeros(6, 6);
 
-    let unscewed_test = vector_r3_from_scew_symmetric_matrix_so3(&logarithm_output_for_logarithm_test);
-
-    println!("unscewed vector from logarithm output: {}", unscewed_test);
-
-    let exp_coor_test = exponential_rotation_matrix_bigso3_from_exponential_coordinates_so3(&logarithm_output_for_logarithm_test);
-
-    println!("exp_coor_test: {}", exp_coor_test);
-
-
-
-    // unit_vector_r3_angle_from_exponential_coordinates_r3
-
-    let (omega_hat, theta_angle) = unit_vector_r3_angle_from_exponential_coordinates_r3(&unscewed_test);
-
-    println!("omega_hat: {}, theta_angle: {}", omega_hat, theta_angle);
-
-
-//transform_bigse3_from_rotation_bigso3_position_r3 
-    let rotation_test = matrix![
-        0.0, -1.0, 0.0;
-        1.0, 0.0, 0.0;
-        0.0, 0.0, 1.0;
-    ];
+    /*
     
-    let position_test = na::Vector3::new(0.0, 0.0, 0.0);
+    let dm = DMatrix::from_row_slice(4, 3, &[
+    1.0, 0.0, 0.0,
+    0.0, 1.0, 0.0,
+    0.0, 0.0, 1.0,
+    0.0, 0.0, 0.0
+]);
+     */
 
-    let transform_test = transform_bigse3_from_rotation_bigso3_position_r3(&rotation_test, &position_test);
 
-    println!("transform_test: {}", transform_test);
+    //    joint_coordinate_list: &na::DVector<f64>,
+    let joint_coordinate_list = na::vector![
+        0.0, -TEST_THETA * 0.5, 0.0, 0.0, TEST_THETA * 0.5, 0.0
+    ];
+
+    //let end_configuration = forward_kinematics_body_6by6(&home_configuration, &blist_matrix, &joint_coordinate_list);
 
 
+    // forward_kinematics_space_6by6
 
-//rotation_bigso3_position_r3_from_transform_bigse3
-    let (rotation_test_2, position_test_2) = rotation_bigso3_position_r3_from_transform_bigse3(&transform_test);
-    println!("rotation_test_2: {}, position_test_2: {}", rotation_test_2, position_test_2);
+    let end_config_space = forward_kinematics_space_6by6(&home_configuration, &spacelist_matrix, &joint_coordinate_list);
+
+
+    //println!("joint_coordinate_list: {}", joint_coordinate_list);
+    //println!("spacelist_matrix: {}", spacelist_matrix);
+
+
+    println!("home_configuration: {}", home_configuration);
+
+    println!("end_config_space: {}", end_config_space);
+
+
+    let expo_neg_half_pi = na::matrix![
+        0.0, 0.0, -1.0, 0.089;
+        0.0, 1.0, 0.0, 0.0;
+        1.0, 0.0, 0.0, 0.089;
+        0.0, 0.0, 0.0, 1.0;        
+    ];
+
+    let expo_pos_half_pi = na::matrix![
+        0.0, 1.0, 0.0, 0.708;
+        -1.0, 0.0, 0.0, 0.0;
+        0.0, 0.0, 1.0, 0.926;
+        0.0, 0.0, 0.0, 1.0;        
+    ];
+
+    let testing_big_cohones = expo_neg_half_pi * expo_pos_half_pi * home_configuration;
+
+    println!("testing_big_cohones: {}", testing_big_cohones);
 
 
 }
@@ -146,6 +196,8 @@ fn unit_vector_r3_angle_from_exponential_coordinates_r3(
     //
     let omega_hat = check_for_normalization_r3(&exponential_coordinates);
     let theta_angle = exponential_coordinates.norm();
+
+    println!("omega_hat: {}, theta_angle: {}", omega_hat, theta_angle);
 
     (omega_hat, theta_angle)
 }
@@ -367,6 +419,7 @@ fn twist_matrix_se3_from_twist_r6(
     // converts first 3 elements of twist_r6 into skew symetric matrix, uses that as rotation in 4x4, last 3 twist elements are the position
 
     let rotation_from_twist = scew_symmetric_matrix_so3_from_vector_r3(&na::Vector3::new(twist_r6[0], twist_r6[1], twist_r6[2]));
+   
 
     let twist_matrix_se3 = na::Matrix4::new(
         rotation_from_twist[(0,0)], rotation_from_twist[(0,1)], rotation_from_twist[(0,2)], twist_r6[3],
@@ -374,6 +427,8 @@ fn twist_matrix_se3_from_twist_r6(
         rotation_from_twist[(2,0)], rotation_from_twist[(2,1)], rotation_from_twist[(2,2)], twist_r6[5],
         0.0                   , 0.0                   , 0.0                   , 0.0                   ,
     );
+
+    println!("twist_matrix_se3: {}", twist_matrix_se3);
 
     twist_matrix_se3
 }
@@ -511,6 +566,7 @@ fn exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(
     exponential_coordinate_matrix_se3: &na::Matrix4<f64>,
 ) -> na::Matrix4<f64> {
     //
+    // issue is that exponential_coordinate_matrix_se3 includes the rotation angle in its angular _and_ velocity components
 
     let mut exponential_transform_matrix_bigse3 = na::matrix![
         0.0, 0.0, 0.0, 0.0;
@@ -519,6 +575,7 @@ fn exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(
         0.0, 0.0, 0.0, 0.0;        
     ];
 
+    // this should be [w]*theta_angle
     let scew_exponential_coordinates = na::matrix![
         exponential_coordinate_matrix_se3[(0,0)], exponential_coordinate_matrix_se3[(0,1)], exponential_coordinate_matrix_se3[(0,2)];
         exponential_coordinate_matrix_se3[(1,0)], exponential_coordinate_matrix_se3[(1,1)], exponential_coordinate_matrix_se3[(1,2)];
@@ -527,6 +584,7 @@ fn exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(
 
 
     let un_scewed_exponential_coordinates = vector_r3_from_scew_symmetric_matrix_so3(&scew_exponential_coordinates);
+    println!("un_scewed_exponential_coordinates: {}", un_scewed_exponential_coordinates);
 
     if near_zero(&un_scewed_exponential_coordinates.norm()) {
         exponential_transform_matrix_bigse3 = na::matrix![
@@ -536,29 +594,35 @@ fn exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(
             0.0, 0.0, 0.0, 1.0;        
         ];
     } else {
+        
         let (rotation_axis, theta_angle) = unit_vector_r3_angle_from_exponential_coordinates_r3(&un_scewed_exponential_coordinates);
         let normal_vector_r3 = check_for_normalization_r3(&rotation_axis);
-        let scew_exponential_coordinates = scew_symmetric_matrix_so3_from_vector_r3(&normal_vector_r3);
-        let scew_exponential_coordinates_squared = scew_exponential_coordinates * scew_exponential_coordinates;
-        let rotation: na::Matrix3<f64> = na::Matrix3::identity() + theta_angle.sin() * scew_exponential_coordinates + (1.0 - theta_angle.cos()) * scew_exponential_coordinates_squared;
+        let scew_normal = scew_symmetric_matrix_so3_from_vector_r3(&normal_vector_r3);
+        let scew_normal_squared = scew_normal * scew_normal;
+        let rotation: na::Matrix3<f64> = na::Matrix3::identity() + theta_angle.sin() * scew_normal + (1.0 - theta_angle.cos()) * scew_normal_squared;
 
-        let big_g_theta: na::Matrix3<f64> = na::Matrix3::identity() * theta_angle + (1.0 - theta_angle.cos()) * scew_exponential_coordinates + (theta_angle - theta_angle.sin()) * scew_exponential_coordinates_squared;
+        let big_g_theta: na::Matrix3<f64> = na::Matrix3::identity() * theta_angle + (1.0 - theta_angle.cos()) * scew_normal + (theta_angle - theta_angle.sin()) * scew_normal_squared;
+
+        //println!("sjlnfdskjc: {}", na::Matrix3::identity() * theta_angle);
 
         let linear_velocity = na::vector![
-            exponential_coordinate_matrix_se3[(0,3)], exponential_coordinate_matrix_se3[(1,3)], exponential_coordinate_matrix_se3[(2,3)]
+            exponential_coordinate_matrix_se3[(0,3)],
+            exponential_coordinate_matrix_se3[(1,3)],
+            exponential_coordinate_matrix_se3[(2,3)]
         ];
 
         let big_g_velocity = big_g_theta * linear_velocity;
 
+        println!("big_g_theta: {}, linear_velocity: {}", big_g_theta, linear_velocity);
+
         exponential_transform_matrix_bigse3 = na::matrix![
-            rotation[(0,0)], rotation[(0,0)], rotation[(0,0)], big_g_velocity[0];
-            rotation[(0,0)], rotation[(0,0)], rotation[(0,0)], big_g_velocity[1];
-            rotation[(0,0)], rotation[(0,0)], rotation[(0,0)], big_g_velocity[2];
+            rotation[(0,0)], rotation[(0,1)], rotation[(0,2)], big_g_velocity[0];
+            rotation[(1,0)], rotation[(1,1)], rotation[(1,2)], big_g_velocity[1];
+            rotation[(2,0)], rotation[(2,1)], rotation[(2,2)], big_g_velocity[2];
             0.0, 0.0, 0.0, 1.0;        
         ];
     
     }
-
 
     exponential_transform_matrix_bigse3
 }
@@ -566,11 +630,140 @@ fn exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(
 
 
 
-fn _matrix_logarithm_se3_from_transformation_matrix_bigse3(
+fn matrix_logarithm_se3_from_transformation_matrix_bigse3(
+    // Computes the matrix logarithm of a homogeneous transformation matrix
+    // params: exponential_transform_matrix_bigse3 -- A 4x4 homoegenous transformation matrix representing the matrix exponential of exponential_coordinate_matrix_se3
+    // returns: exponential_coordinate_matrix_logarithm_se3 -- A 4x4 matrix representation of exponential coordinates -- the matrix logarithm of exponential_transform_matrix_bigse3
+    exponential_transform_matrix_bigse3: &na::Matrix4<f64>,
+) -> na::Matrix4<f64> {
     //
-) {
-    //
+    let mut exponential_coordinate_matrix_logarithm_se3 = na::matrix![
+        0.0, 0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0, 0.0;
+        0.0, 0.0, 0.0, 0.0;
+    ];
+
+
+    // Solving for the scew representation of the angular veolicity w
+    let (rotation, position) = rotation_bigso3_position_r3_from_transform_bigse3(&exponential_transform_matrix_bigse3);
+
+    let scew_angular_velocity = matrix_logarithm_so3_from_rotation_matrix_bigso3(&rotation);
+
+    // Solving for the linear velocity v
+
+    let zero_matrix = na::Matrix3::<f64>::zeros();
+    if scew_angular_velocity == zero_matrix {
+        exponential_coordinate_matrix_logarithm_se3[(0,3)] = position[0];
+        exponential_coordinate_matrix_logarithm_se3[(1,3)] = position[1];
+        exponential_coordinate_matrix_logarithm_se3[(2,3)] = position[2];
+        return exponential_coordinate_matrix_logarithm_se3
+    } else {
+
+
+
+        //let cosine_of_theta = (trace_of_matrix3(&rotation_matrix_bigso3) - 1.0) / 2.0;
+        //let scew_exponential_coordinates_so3 = matrix_logarithm_so3_from_rotation_matrix_bigso3(&rotation);
+        // unit_vector_r3_angle_from_exponential_coordinates_r3
+        let un_scewed_exponential_coordinates = vector_r3_from_scew_symmetric_matrix_so3(&scew_angular_velocity);
+        let (unit_angular_velocity, theta_angle) = unit_vector_r3_angle_from_exponential_coordinates_r3(&un_scewed_exponential_coordinates);
+        // v = G^-1 (theta) * p
+
+        let identity_over_theta = na::Matrix3::identity() / theta_angle;
+        let quadratic_coefficient = (1.0/theta_angle) - 0.5 * (1.0 / (0.5 * theta_angle).tan());
+
+        let scewed_unit_angular_velocity = scew_symmetric_matrix_so3_from_vector_r3(&unit_angular_velocity);
+
+        let unit_scew_angular_velocity_squared = scewed_unit_angular_velocity * scewed_unit_angular_velocity;
+
+        let big_g_inverse_theta = identity_over_theta - 0.5 * scewed_unit_angular_velocity + quadratic_coefficient * unit_scew_angular_velocity_squared;
+
+        let linear_velocity = big_g_inverse_theta * position;
+
+        exponential_coordinate_matrix_logarithm_se3 = na::matrix![
+            scew_angular_velocity[(0,0)], scew_angular_velocity[(0,1)], scew_angular_velocity[(0,2)], linear_velocity[0];
+            scew_angular_velocity[(1,0)], scew_angular_velocity[(1,1)], scew_angular_velocity[(1,2)], linear_velocity[1];
+            scew_angular_velocity[(2,0)], scew_angular_velocity[(2,1)], scew_angular_velocity[(2,2)], linear_velocity[2];
+            0.0                         , 0.0                         , 0.0                         , 0.0               ;
+        ];
+        return exponential_coordinate_matrix_logarithm_se3 * theta_angle
+    }
+
 }
+
+
+
+
+fn distance_to_bigso3(
+    // Returns the Frobenius norm to describe the distance of mat from the SO(3) manifold -- how "close" is the matrix to one that is in SO(3)?
+    // params: matrix_3by3 -- A 3x3 matrix
+    // returns distance_ratio -- A f64 representing the distance of matrix_3by3 from the SO(3) manifold
+    matrix_3by3: &na::Matrix3<f64>,
+) -> f64 {
+    //
+    if matrix_3by3.determinant() > 0.0 {
+        let matrix_transpose_dot_matrix = matrix_3by3.transpose() * matrix_3by3;
+        return (matrix_transpose_dot_matrix - na::Matrix3::identity()).norm()
+    } else {
+        return 1.0e+9
+    }
+}
+
+
+
+fn distance_to_bigse3(
+    // Returns the Frobenius norm to describe the distance of mat from the SE(3) manifold -- how "close" is the matrix to one that is in SE(3)?
+    // params: matrix_4by4 -- A 4x4 matrix
+    // returns distance_ratio -- A f64 representing the distance of matrix_4by4 from the SE(3) manifold
+    matrix_4by4: &na::Matrix4<f64>,
+) -> f64 {
+    //
+    let (rotation, position) = rotation_bigso3_position_r3_from_transform_bigse3(&matrix_4by4);
+    if rotation.determinant() > 0.0 {
+        let matrix_transpose_dot_matrix = rotation.transpose() * rotation;
+
+        let new_mat = na::matrix![
+            matrix_transpose_dot_matrix[(0,0)], matrix_transpose_dot_matrix[(0,1)], matrix_transpose_dot_matrix[(0,2)],  0.0;
+            matrix_transpose_dot_matrix[(1,0)], matrix_transpose_dot_matrix[(1,1)], matrix_transpose_dot_matrix[(1,2)],  0.0;
+            matrix_transpose_dot_matrix[(2,0)], matrix_transpose_dot_matrix[(2,1)], matrix_transpose_dot_matrix[(2,2)],  0.0;
+            0.0, 0.0, 0.0, 0.0;
+        ];
+        return (new_mat - na::Matrix4::identity()).norm()
+
+    } else {
+        return 1.0e+9
+    }
+
+}
+
+
+fn test_if_bigso3(
+    // Returns true if a matrix is close enough to or on the SO(3) manifold
+    // params: matrix_3by3 -- A 3x3 matrix
+    // returns: is_bigso3 -- A boolean stating whether or not matrix_3by3 is close enough to or on the SO(3) manifold
+    matrix_3by3: &na::Matrix3<f64>,
+) -> bool {
+    //
+    
+    distance_to_bigso3(&matrix_3by3).abs() < 1.0e-3
+}
+
+//     return abs(DistanceToSO3(mat)) < 1e-3
+
+fn test_if_bigse3(
+    // Returns true if a matrix is close enough to or on the SE(3) manifold
+    // params: matrix_4by4 -- A 4x4 matrix
+    // returns: is_bigso3 -- A boolean stating whether or not matrix_4by4 is close enough to or on the SE(3) manifold
+    matrix_4by4: &na::Matrix4<f64>,
+) -> bool {
+    //
+
+    distance_to_bigse3(&matrix_4by4).abs() < 1.0e-3
+}
+
+
+
+
 
 
 
@@ -587,14 +780,16 @@ fn forward_kinematics_body(
     // Computes the forward kinemtaics for an open chain robot in the body frame (B)
     // params: home_configuration -- (M) -- The home configuration (position and orientation) of the end-effector
     // params: screw_axis_matrix_body_frame -- (Blist) -- The joint screw axes in the end-effector frame when the manipulator
-    //                                                      is at the home position, in the format of a matrix with axes as the columns
-    // params: joint_coordinate_list -- (thetalit) -- A list of joint coordinates
+    //                                                      is at the home position, in the format of a matrix with the intended axes as the columns
+    // params: joint_coordinate_list -- (thetalist) -- A list of joint coordinates
     // returns: forward_kinematics_transform_body -- A 4x4 homeogenous transformation matrix representing the position and orientation (configuration)
     //                                            of the end-effector of an open chain robot at a specific set of joint coordinates
     home_configuration: &na::Matrix4<f64>,
     // figure out declaration and use of dynamically sized matrices -- this might not work
     //screw_axis_matrix_body_frame: na::Matrix<f64, U6, Dyn, f64>,
-    screw_axis_matrix_body_frame: &na::DMatrix<f64>,
+    //screw_axis_matrix_body_frame: &na::DMatrix<f64>,
+    screw_axis_matrix_body_frame: &Matrix6xXf64,
+    // screw_axis_matrix_body_frame: &na::Matrix6xX<f64>,
     //joint_coordinate_list: na::Vector<f64, Dyn, f64>,
     joint_coordinate_list: &na::DVector<f64>,
 
@@ -603,21 +798,86 @@ fn forward_kinematics_body(
 
     // since screw_axis_matrix_body_frame is a dynamically sized matrix, we need to make sure it's the right size (some number of vectors of screw axes)
 
-    let mut forward_kinematics_transform_body = matrix![
-        0.0, 0.0, 0.0, 0.0;
-        0.0, 0.0, 0.0, 0.0;
-        0.0, 0.0, 0.0, 0.0;
-        0.0, 0.0, 0.0, 0.0;
-    ];
+    //let mut forward_kinematics_transform_body = matrix![
+    //    0.0, 0.0, 0.0, 0.0;
+    //    0.0, 0.0, 0.0, 0.0;
+    //    0.0, 0.0, 0.0, 0.0;
+    //    0.0, 0.0, 0.0, 0.0;
+    //];
 
-    //forward_kinematics_transform_body = home_configuration;
+    let mut forward_kinematics_transform_body = *home_configuration;
 
-    for theta_angle in joint_coordinate_list.iter() {
-        //forward_kinematics_transform_body = forward_kinematics_transform_body * 
+    
+
+    for (i, theta_angle) in joint_coordinate_list.iter().enumerate() {
+        // get all rows of screw_axis_matrix_body_frame at a particular column i 
+        // twist_matrix_se3_from_twist_r6
+        let mut current_twist = na::vector![
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[0], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[1], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[2], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[3], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[4], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[5]
+        ];
+
+
+        for element in current_twist.iter_mut() {
+            *element *= theta_angle;
+        }
+        
+
+        let configured_twist_se3 = twist_matrix_se3_from_twist_r6(&current_twist);
+        let configured_matrix_exponential_bigse3 = exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(&configured_twist_se3);
+        
+        forward_kinematics_transform_body = forward_kinematics_transform_body * configured_matrix_exponential_bigse3;
     }
 
     forward_kinematics_transform_body
 }
+
+
+// not implemented
+// These two functions feel like they should be combined into a single function? Not sure
+fn forward_kinematics_body_6by6(
+    home_configuration: &na::Matrix4<f64>,
+    screw_axis_matrix_body_frame: &na::Matrix6<f64>,
+    joint_coordinate_list: &na::Vector6<f64>,
+
+) -> na::Matrix4<f64> {
+
+
+    let mut forward_kinematics_transform_body = *home_configuration;
+
+    
+
+    for (i, theta_angle) in joint_coordinate_list.iter().enumerate() {
+        // get all rows of screw_axis_matrix_body_frame at a particular column i 
+        // twist_matrix_se3_from_twist_r6
+        //println!("theta_angle body: {}", theta_angle);
+        let mut current_twist = na::vector![
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[0], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[1], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[2], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[3], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[4], 
+            screw_axis_matrix_body_frame.columns(i as usize, 1)[5]
+        ];
+
+        for element in current_twist.iter_mut() {
+            *element *= theta_angle;
+        }
+        let configured_twist_se3 = twist_matrix_se3_from_twist_r6(&current_twist);
+        let configured_matrix_exponential_bigse3 = exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(&configured_twist_se3);
+        
+        forward_kinematics_transform_body = forward_kinematics_transform_body * configured_matrix_exponential_bigse3;
+    }
+
+    forward_kinematics_transform_body
+}
+
+
+
 
 
 fn forward_kinematics_space(
@@ -627,7 +887,66 @@ fn forward_kinematics_space(
 }
 
 
+fn forward_kinematics_space_6by6(
+    home_configuration: &na::Matrix4<f64>,
+    screw_axis_matrix_space_frame: &na::Matrix6<f64>,
+    joint_coordinate_list: &na::Vector6<f64>,
+) -> na::Matrix4<f64> {
+    let mut forward_kinematics_transform_space = *home_configuration;
 
+
+    // need to negtively iterate through the joint coordinate list, or just reverse the list in the first place
+    for (i, theta_angle) in joint_coordinate_list.iter().enumerate().rev() {
+        // get all rows of screw_axis_matrix_body_frame at a particular column i 
+        // twist_matrix_se3_from_twist_r6
+        if theta_angle < &0.0 {
+            println!("theta_angle space: {}", theta_angle);
+        }
+        //println!("theta_angle space: {}", theta_angle);
+        // I comes out as 5, 4, 3, 2, 1, 0
+        let mut current_twist = na::vector![
+            screw_axis_matrix_space_frame.columns(i, 1)[0], 
+            screw_axis_matrix_space_frame.columns(i, 1)[1], 
+            screw_axis_matrix_space_frame.columns(i, 1)[2], 
+            screw_axis_matrix_space_frame.columns(i, 1)[3], 
+            screw_axis_matrix_space_frame.columns(i, 1)[4], 
+            screw_axis_matrix_space_frame.columns(i, 1)[5]
+        ];
+
+
+        // configuring the twist with your angle measurement should only occur in the last step? No... it should only occur on the angular velocity, not on the linear portion
+        // essentially, im doing [S]*theta = [ [w]*theta, 0; v*theta, 0], when i should be doing [S]*theta = [ [w]*theta, 0; v, 0]
+        //for element in current_twist.iter_mut() {
+        //    *element *= theta_angle;
+        //}
+
+        
+        current_twist[0] *= theta_angle;
+        current_twist[1] *= theta_angle;
+        current_twist[2] *= theta_angle;
+
+        if theta_angle < &0.0 {
+            current_twist[3] *= -1.0;
+            current_twist[4] *= -1.0;
+            current_twist[5] *= -1.0;
+        }
+
+        println!("current_twist: {}", current_twist);
+
+        let configured_twist_se3 = twist_matrix_se3_from_twist_r6(&current_twist);
+
+        println!("configured_twist_se3: {}", configured_twist_se3);
+
+        let configured_matrix_exponential_bigse3 = exponential_transformation_matrix_bigse3_from_exponential_coordinates_se3(&configured_twist_se3);
+        
+        
+        println!("configured_matrix_exponential_bigse3 at angle {}: {}", i, configured_matrix_exponential_bigse3);
+
+        forward_kinematics_transform_space = configured_matrix_exponential_bigse3 * forward_kinematics_transform_space;
+    }
+
+    forward_kinematics_transform_space
+}
 
 
 
