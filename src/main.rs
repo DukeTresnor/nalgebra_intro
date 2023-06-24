@@ -25,28 +25,28 @@ pub const TEST_THETA: f64 = std::f64::consts::PI * 1.0;
 
 fn main() {
 
-    let length_1 = 0.425;
-    let length_2 = 0.392;
-    let width_1 = 0.109;
-    let width_2 = 0.082;
-    let height_1 = 0.089;
-    let height_2 = 0.095;
+    let length_1 = 0.1;
+    let length_2 = 0.1;
+    let width_1 = 0.0;
+    let width_2 = 0.0;
+    let height_1 = 0.0;
+    let height_2 = 0.0;
     
 
     let home_configuration = na::matrix![
-        -1.0, 0.0, 0.0, length_1 + length_2;
-        0.0, 0.0, 1.0, width_1 + width_2;
-        0.0, 1.0, 0.0, height_1 - height_2;
+        1.0, 0.0, 0.0, 0.0;
+        0.0, 1.0, 0.0, length_1 + length_2;
+        0.0, 0.0, 1.0, 0.0;
         0.0, 0.0, 0.0, 1.0;        
     ];
 
     let spacelist_matrix = na::matrix![
-        0.0     , 0.0      , 0.0      , 0.0      , 0.0     , 0.0                ;
-        0.0     , 1.0      , 1.0      , 1.0      , 0.0     , 1.0                ;
-        1.0     , 0.0      , 0.0      , 0.0      , -1.0    , 0.0                ;
-        0.0     , -height_1, -height_1, -height_1, -width_1, height_2 - height_1;
-        0.0     , 0.0      , 0.0      , 0.0      , length_1 + length_2, 0.0;
-        0.0     , 0.0      , length_1 , length_1 + length_2, 0.0, length_1 + length_2;
+        0.0     , 1.0      , 0.0      , 0.0      , 1.0     , 0.0                ;
+        0.0     , 0.0      , 0.0      , 1.0      , 0.0     , 1.0                ;
+        1.0     , 0.0      , 0.0      , 0.0      , 0.0     , 0.0                ;
+        0.0     , 0.0      , 0.0      , 0.0      , 0.0     , 0.0;
+        0.0     , 0.0      , 1.0      , 0.0      , 0.0     , 0.0;
+        0.0     , 0.0      , 0.0      , 0.0      , -length_1, 0.0;
     ];
 
  
@@ -56,7 +56,7 @@ fn main() {
 
     //    joint_coordinate_list: &na::DVector<f64>,
     let joint_coordinate_list = na::vector![
-        0.0, -TEST_THETA * 0.5, 0.0, 0.0, TEST_THETA * 0.5, 0.0
+        -TEST_THETA * 0.5, 0.0, 0.0, 0.0, 0.0, 0.0
     ];
 
     //let end_configuration = forward_kinematics_body_6by6(&home_configuration, &blist_matrix, &joint_coordinate_list);
